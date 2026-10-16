@@ -523,7 +523,16 @@ function download(content,name,type){
   const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");
   a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-$("backupBtn").onclick=()=>download(JSON.stringify(data,null,2),"gerard-cafe-backup.json","application/json");
+$("backupBtn").onclick=()=>{
+  const content=JSON.stringify(data,null,2);
+  const filename="gerard-cafe-backup.json";
+
+  if(window.Android && typeof Android.saveBackup==="function"){
+    Android.saveBackup(filename,content);
+  }else{
+    download(content,filename,"application/json");
+  }
+};
 $("importBtn").onclick=()=>$("backupFile").click();
 $("backupFile").onchange=async e=>{
   const file=e.target.files[0];
