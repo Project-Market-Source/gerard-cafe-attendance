@@ -1,3 +1,538 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gerard Cafe | Staff Attendance</title>
+<style>
+:root{
+  --bg:#f4f5f7;--white:#fff;--ink:#202631;--muted:#858c98;
+  --gold:#b9975b;--gold-light:#f5eddf;--green:#18845b;
+  --green-bg:#e4f5ed;--red:#d84949;--red-bg:#ffeded;
+  --border:#e8e9ed;--navy:#202936;--shadow:0 8px 28px #2029360c
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Tahoma,sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer;transition:.18s}
+button:hover{filter:brightness(.97)}
+.topbar{height:72px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:5}
+.menu-btn{width:43px;height:43px;border:1px solid var(--border);background:#fff;border-radius:12px;font-size:23px;color:var(--ink)}
+.top-brand{font-size:14px;font-weight:bold;letter-spacing:2px;color:var(--gold)}
+.top-right{display:flex;align-items:center;gap:12px}
+.online{width:8px;height:8px;border-radius:50%;background:#20a66f;display:inline-block}
+main{max-width:1180px;margin:auto;padding:30px 22px 60px}
+.page{display:none}.page.active{display:block}
+.hero{background:#fff;border:1px solid var(--border);border-radius:22px;text-align:center;padding:34px 20px 28px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.hero:before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--gold)}
+.cafe-kicker{color:var(--gold);font-size:11px;letter-spacing:4px;font-weight:bold;margin-bottom:9px}
+.cafe-name{font-family:Georgia,serif;font-size:clamp(29px,4vw,40px);letter-spacing:2px;margin:0;color:#252c36;font-weight:600}
+.cafe-subtitle{font-size:12px;color:var(--muted);margin-top:7px;letter-spacing:1.5px}
+.clock-area{margin:25px auto 0;display:flex;justify-content:center;align-items:center;gap:15px;flex-wrap:wrap}
+.clock{font-size:clamp(25px,4vw,34px);font-weight:600;letter-spacing:1px;direction:ltr;font-variant-numeric:tabular-nums}
+.clock-divider{height:28px;width:1px;background:var(--border)}
+.date{font-size:13px;color:#737b87}
+.shift-label{font-size:12px;color:var(--muted);margin-top:8px}
+.actions{display:flex;justify-content:center;gap:14px;max-width:510px;margin:28px auto 0}
+.action-btn{flex:1;min-width:0;border:0;border-radius:12px;padding:15px 10px;font-weight:bold;font-size:15px;display:flex;align-items:center;justify-content:center;gap:9px}
+.action-btn .symbol{font-size:18px}
+.check-in{background:var(--green);color:#fff}
+.check-out{background:var(--red);color:#fff}
+.section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:28px 0 14px}
+.section-heading h2{font-size:17px;margin:0;font-weight:700}
+.section-heading p{margin:5px 0 0;color:var(--muted);font-size:12px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.stat{background:#fff;border:1px solid var(--border);border-radius:16px;padding:19px;box-shadow:var(--shadow);min-width:0}
+.stat-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.stat-label{font-size:12px;color:#747c88}
+.stat-icon{width:35px;height:35px;border-radius:11px;display:grid;place-items:center;font-size:17px}
+.icon-total{background:#f5eddf;color:#a17b37}.icon-present{background:var(--green-bg);color:var(--green)}
+.icon-out{background:#e9efff;color:#4770c7}.icon-absent{background:var(--red-bg);color:var(--red)}
+.stat-number{font-size:29px;font-weight:700;margin-top:16px}
+.stat-note{font-size:11px;color:var(--muted);margin-top:5px}
+.panel{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+.panel-title{font-size:15px;font-weight:bold;margin:0 0 16px}
+input,select{width:100%;padding:12px;border:1px solid #e0e3e8;border-radius:9px;background:#fff;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:var(--gold)}
+label{display:block;font-size:12px;color:#727b87;margin-bottom:7px}
+.field{margin-bottom:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1}
+.btn{border:0;border-radius:9px;padding:11px 14px;font-weight:bold}
+.btn-gold{background:var(--gold);color:#fff}.btn-light{background:#f0f2f5;color:#343b46}
+.btn-red{background:var(--red);color:#fff}
+.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:11px}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{text-align:right;padding:13px;border-bottom:1px solid var(--border);font-size:13px}
+th{background:#fafafa;color:#747c88;font-size:11px}
+tr:last-child td{border-bottom:0}
+.empty{text-align:center;color:var(--muted);padding:25px;font-size:13px}
+.badge{display:inline-block;padding:5px 9px;border-radius:20px;font-size:11px;background:#f0f2f5;color:#626b78}
+.badge.green{background:var(--green-bg);color:var(--green)}
+.badge.red{background:var(--red-bg);color:var(--red)}
+.sidebar-overlay{position:fixed;inset:0;background:#12192577;z-index:19;display:none}
+.sidebar-overlay.open{display:block}
+.sidebar{position:fixed;top:0;bottom:0;left:0;width:285px;background:var(--navy);color:#fff;z-index:20;padding:25px 18px;transform:translateX(-105%);transition:transform .25s;box-shadow:10px 0 40px #0002;direction:rtl}
+.sidebar.open{transform:translateX(0)}
+.sidebar-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:24px;border-bottom:1px solid #ffffff20}
+.sidebar-logo{font-family:Georgia,serif;font-size:22px;color:#d6b779;letter-spacing:1px}
+.close-menu{background:#ffffff15;border:0;color:#fff;border-radius:9px;width:35px;height:35px;font-size:19px}
+.side-caption{color:#9ea9b8;font-size:10px;letter-spacing:2px;margin:26px 10px 12px}
+.side-link{width:100%;text-align:right;border:0;background:transparent;color:#d5dbe4;padding:14px 13px;border-radius:10px;margin:3px 0;font-size:14px;display:flex;align-items:center;gap:12px}
+.side-link .side-icon{width:22px;text-align:center;color:#d6b779}
+.side-link.active,.side-link:hover{background:#ffffff12;color:#e5c98e}
+.sidebar-footer{position:absolute;bottom:25px;right:22px;left:22px;color:#aab3c0;font-size:11px;line-height:1.8}
+.modal{display:none;position:fixed;inset:0;z-index:30;background:#11182788;align-items:center;justify-content:center;padding:16px}
+.modal.open{display:flex}
+.modal-box{width:min(440px,100%);max-height:85vh;overflow:auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 20px 70px #0003}
+.modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.modal-head h2{font-size:19px;margin:0}
+.modal-close{border:0;background:#f0f2f5;border-radius:9px;width:35px;height:35px;font-size:18px}
+.modal-desc{font-size:12px;color:var(--muted);margin:10px 0 18px}
+.employee-list{display:grid;gap:8px;margin-top:12px}
+.employee-option{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:13px;background:#fff;border:1px solid var(--border);border-radius:11px;text-align:right;color:var(--ink)}
+.employee-option:hover{border-color:var(--gold);background:#fcfaf6}
+.employee-option small{color:var(--muted)}
+.toast{position:fixed;bottom:20px;left:20px;z-index:50;background:#202936;color:#fff;padding:14px 18px;border-radius:11px;box-shadow:var(--shadow);display:none;max-width:90%}
+.toast.show{display:block}
+@media(max-width:760px){main{padding:18px 12px 40px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat{padding:15px}.stat-number{font-size:25px}.hero{padding:29px 13px 23px}.clock-area{gap:9px}.date{font-size:12px}.actions{gap:9px}.action-btn{font-size:13px;padding:15px 6px}.topbar{padding:0 14px}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="فتح القائمة">☰</button>
+  <div class="top-brand">GERARD CAFE</div>
+  <div class="top-right"><span class="online"></span><span style="font-size:12px;color:#737b87">نظام الدوام</span></div>
+</header>
+
+<div class="sidebar-overlay" id="overlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-head">
+    <div><div class="sidebar-logo">GERARD CAFE</div><small>نظام إدارة الموظفين</small></div>
+    <button class="close-menu" id="closeMenu">×</button>
+  </div>
+  <div class="side-caption">القائمة الرئيسية</div>
+  <button class="side-link active" data-page="home"><span class="side-icon">⌂</span>الرئيسية</button>
+  <button class="side-link" data-page="employees"><span class="side-icon">♙</span>إدارة الموظفين</button>
+  <button class="side-link" data-page="records"><span class="side-icon">▤</span>سجل الحضور والانصراف</button>
+  <button class="side-link" data-page="reports"><span class="side-icon">▥</span>التقارير والنسخ الاحتياطي</button>
+  <div class="sidebar-footer">GERARD CAFE<br>نظام تسجيل الحضور والانصراف</div>
+</aside>
+
+<main>
+<section class="page active" id="home">
+  <div class="hero">
+    <div class="cafe-kicker">WELCOME TO</div>
+    <h1 class="cafe-name">GERARD CAFE</h1>
+    <div class="cafe-subtitle">STAFF ATTENDANCE SYSTEM</div>
+    <div class="clock-area">
+      <div class="clock" id="clock">00:00</div>
+      <div class="clock-divider"></div>
+      <div class="date" id="date">—</div>
+    </div>
+    <div class="shift-label">نظام تسجيل حضور وانصراف الموظفين</div>
+    <div class="actions">
+      <button class="action-btn check-in" id="checkInBtn"><span class="symbol">↙</span> تسجيل الدخول</button>
+      <button class="action-btn check-out" id="checkOutBtn"><span class="symbol">↗</span> تسجيل الانصراف</button>
+    </div>
+  </div>
+
+  <div class="section-heading">
+    <div><h2>ملخص الدوام اليوم</h2><p id="summaryDate">إحصائيات الحضور لهذا اليوم</p></div>
+    <span class="badge" id="todayBadge">اليوم</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-top"><span class="stat-label">إجمالي الموظفين</span><span class="stat-icon icon-total">♙</span></div><div class="stat-number" id="totalEmployees">0</div><div class="stat-note">كل الموظفين المسجلين</div></div>
+    <div class="stat"><div class="stat-top"><span class="stat-label">الحاضرون</span><span class="stat-icon icon-present">✓</span></div><div class="stat-number" id="presentToday">0</div><div class="stat-note">سجلوا وقت الدخول اليوم ولم يسجلوا الانصراف</div></div>
+    <div class="stat"><div class="stat-top"><span class="stat-label">سجلوا الانصراف</span><span class="stat-icon icon-out">↗</span></div><div class="stat-number" id="outToday">0</div><div class="stat-note">انتهى دوامهم اليوم</div></div>
+    <div class="stat"><div class="stat-top"><span class="stat-label">غير المتواجدين</span><span class="stat-icon icon-absent">−</span></div><div class="stat-number" id="absentToday">0</div><div class="stat-note">لم يسجلوا الدخول اليوم</div></div>
+  </div>
+
+  <div class="section-heading"><div><h2>آخر الحركات</h2><p>أحدث تسجيلات الحضور والانصراف</p></div><button class="btn btn-light" data-page="records">عرض الكل ←</button></div>
+  <div class="panel" id="recent"></div>
+</section>
+
+<section class="page" id="employees">
+  <div class="section-heading"><div><h2>إدارة الموظفين</h2><p>إضافة الأسماء وتعديلها وتنظيمها</p></div></div>
+  <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">
+    <div class="panel">
+      <h3 id="formTitle" class="panel-title">إضافة موظف جديد</h3>
+      <form id="employeeForm">
+        <input type="hidden" id="editId">
+        <div class="field"><label for="empName">اسم الموظف</label><input id="empName" required maxlength="100" placeholder="اكتب الاسم الكامل"></div>
+        <div class="field"><label for="empDept">القسم أو الوظيفة</label><input id="empDept" maxlength="100" placeholder="مثلاً: خدمة، مطبخ، كاشير"></div>
+        <div class="row"><button class="btn btn-gold" type="submit">حفظ الموظف</button><button class="btn btn-light" type="button" id="cancelEdit">إلغاء</button></div>
+      </form>
+    </div>
+    <div class="panel">
+      <h3 class="panel-title">البحث عن موظف</h3>
+      <div class="field"><label for="empSearch">الاسم أو القسم</label><input id="empSearch" placeholder="اكتب للبحث..."></div>
+      <div style="font-size:12px;line-height:1.8">تظهر الأسماء المضافة هنا وفي نافذة تسجيل الدخول والانصراف.</div>
+    </div>
+  </div>
+  <div class="section-heading"><h2>قائمة الموظفين</h2><span class="badge" id="empCount">0 موظف</span></div>
+  <div id="employeesTable"></div>
+</section>
+
+<section class="page" id="records">
+  <div class="section-heading"><div><h2>سجل الحضور والانصراف</h2><p>اختار الشهر والسنة لعرض سجلات الشهر، أو صفِّ حسب التاريخ والموظف</p></div></div>
+  <div class="panel">
+    <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+      <div class="field"><label for="filterMonth">الشهر والسنة</label><input id="filterMonth" type="month"></div>
+      <div class="field"><label for="filterDate">التاريخ</label><input id="filterDate" type="date"></div>
+      <div class="field"><label for="filterEmp">الموظف</label><select id="filterEmp"><option value="">كل الموظفين</option></select></div>
+      <div class="field"><label for="filterType">نوع التسجيل</label><select id="filterType"><option value="">الكل</option><option value="in">الحضور</option><option value="out">الانصراف</option></select></div>
+    </div>
+    <div id="monthSummary" style="font-size:12px;color:#858c98;margin:0 0 14px"></div>
+    <div class="row"><button class="btn btn-gold" id="applyFilters">تطبيق الفلاتر</button><button class="btn btn-light" id="resetFilters">الشهر الحالي</button><button class="btn btn-light" id="csvBtn">تصدير CSV للشهر المحدد</button></div>
+  </div>
+  <div style="margin-top:16px" id="recordsTable"></div>
+</section>
+
+<section class="page" id="reports">
+  <div class="section-heading"><div><h2>التقارير والنسخ الاحتياطي</h2><p>ملخص الحضور مع إمكانية حفظ نسخة من البيانات</p></div></div>
+  <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">
+    <div class="panel">
+      <h3 class="panel-title">تقرير فترة محددة</h3>
+      <div class="field"><label for="fromDate">من تاريخ</label><input type="date" id="fromDate"></div>
+      <div class="field"><label for="toDate">إلى تاريخ</label><input type="date" id="toDate"></div>
+      <div class="field"><label for="reportEmp">الموظف</label><select id="reportEmp"><option value="">كل الموظفين</option></select></div>
+      <button class="btn btn-gold" id="reportBtn">إنشاء التقرير</button>
+      <div id="reportResults" style="margin-top:16px"></div>
+    </div>
+    <div class="panel">
+      <h3 class="panel-title">النسخ الاحتياطي</h3>
+      <p style="font-size:13px;line-height:1.8">احتفظ بنسخة من الموظفين والسجلات لاستعادتها لاحقاً.</p>
+      <div class="row"><button class="btn btn-gold" id="backupBtn">تنزيل نسخة</button><button class="btn btn-light" id="importBtn">استيراد نسخة</button></div>
+      <input id="backupFile" type="file" accept=".json,application/json" hidden>
+    </div>
+    <div class="panel">
+      <h3 class="panel-title">حذف البيانات</h3>
+      <p style="font-size:13px;line-height:1.8">يحذف جميع الموظفين وسجلات الدوام من هذا المتصفح.</p>
+      <button class="btn btn-red" id="clearBtn">حذف جميع البيانات</button>
+    </div>
+  </div>
+</section>
+</main>
+
+<div class="modal" id="picker">
+  <div class="modal-box">
+    <div class="modal-head"><h2 id="pickerTitle">اختيار الموظف</h2><button class="modal-close" id="closePicker">×</button></div>
+    <p class="modal-desc" id="pickerText">اختَر اسم الموظف من القائمة.</p>
+    <div class="field"><label for="pickerSearch">البحث عن الاسم</label><input id="pickerSearch" placeholder="اكتب اسم الموظف..."></div>
+    <div class="employee-list" id="pickerList"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const KEY="gerard_cafe_dawami_v2";
+let data=loadData(),pendingType="in",filteredRecords=[];
+
+function loadData(){
+  try{
+    const x=JSON.parse(localStorage.getItem(KEY));
+    if(x&&Array.isArray(x.employees)&&Array.isArray(x.attendance))return x;
+  }catch(e){}
+  return {employees:[],attendance:[]};
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,9);}
+function today(){
+  const d=new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function currentMonth(){
+  return today().slice(0,7);
+}
+
+/* الوقت بالدقائق فقط، بدون ثواني */
+function clockTime(){
+  return new Date().toLocaleTimeString("en-GB",{
+    hour:"2-digit",
+    minute:"2-digit",
+    hour12:false
+  });
+}
+function safe(s){
+  return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function employeeName(id){
+  const employee=data.employees.find(e=>e.id===id);
+  if(employee)return employee.name;
+
+  const oldRecord=data.attendance.find(r=>r.employeeId===id);
+  return oldRecord?.employeeName||"موظف محذوف";
+}
+function toast(msg){
+  const el=$("toast");
+  el.textContent=msg;
+  el.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer=setTimeout(()=>el.classList.remove("show"),3000);
+}
+function updateClock(){
+  const d=new Date();
+  $("clock").textContent=clockTime();
+  $("date").textContent=d.toLocaleDateString("ar-IQ",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  $("summaryDate").textContent=d.toLocaleDateString("ar-IQ",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+}
+setInterval(updateClock,1000);
+updateClock();
+
+function showPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===id));
+  document.querySelectorAll(".side-link").forEach(b=>b.classList.toggle("active",b.dataset.page===id));
+  closeMenu();
+  if(id==="employees")renderEmployees();
+  if(id==="records")renderRecords();
+  if(id==="reports")populateSelects();
+}
+document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
+$("menuBtn").onclick=()=>{$("sidebar").classList.add("open");$("overlay").classList.add("open");};
+$("closeMenu").onclick=closeMenu;
+$("overlay").onclick=closeMenu;
+function closeMenu(){
+  $("sidebar").classList.remove("open");
+  $("overlay").classList.remove("open");
+}
+
+$("checkInBtn").onclick=()=>openPicker("in");
+$("checkOutBtn").onclick=()=>openPicker("out");
+function openPicker(type){
+  pendingType=type;
+  $("pickerTitle").textContent=type==="in"?"تسجيل الدخول":"تسجيل الانصراف";
+  $("pickerText").textContent=type==="in"?"اختَر اسم الموظف لتسجيل وقت الحضور.":"اختَر اسم الموظف لتسجيل وقت الانصراف.";
+  $("pickerSearch").value="";
+  renderPicker();
+  $("picker").classList.add("open");
+  $("pickerSearch").focus();
+}
+function closePicker(){$("picker").classList.remove("open");}
+$("closePicker").onclick=closePicker;
+$("picker").onclick=e=>{if(e.target===$("picker"))closePicker();};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closePicker();closeMenu();}});
+$("pickerSearch").oninput=renderPicker;
+
+function renderPicker(){
+  const q=$("pickerSearch").value.trim().toLocaleLowerCase();
+  const list=data.employees.filter(e=>(e.name+" "+(e.department||"")).toLocaleLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name,"ar"));
+  $("pickerList").innerHTML=list.length?list.map(e=>`<button class="employee-option" data-pick="${safe(e.id)}"><span><strong>${safe(e.name)}</strong><br><small>${safe(e.department||"بدون قسم")}</small></span><span>اختيار ←</span></button>`).join(""):'<div class="empty">ماكو أسماء. أضف الموظفين من القائمة الجانبية.</div>';
+  $("pickerList").querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>registerAttendance(b.dataset.pick,pendingType));
+}
+function registerAttendance(empId,type){
+  const date=today();
+  let r=data.attendance.find(x=>x.employeeId===empId&&x.date===date);
+  if(!r){r={id:uid(),employeeId:empId,date,checkIn:"",checkOut:""};data.attendance.push(r);}
+  if(type==="in"){
+    if(r.checkIn){toast("هذا الموظف مسجل حضوره مسبقاً اليوم.");return;}
+    r.checkIn=clockTime();
+  }else{
+    if(!r.checkIn){toast("لا يمكن تسجيل الانصراف قبل تسجيل الحضور.");return;}
+    if(r.checkOut){toast("هذا الموظف مسجل انصرافه مسبقاً اليوم.");return;}
+    r.checkOut=clockTime();
+  }
+  save();
+  closePicker();
+  renderAll();
+  toast((type==="in"?"تم تسجيل دخول ":"تم تسجيل انصراف ")+employeeName(empId)+" الساعة "+(type==="in"?r.checkIn:r.checkOut));
+}
+
+$("employeeForm").onsubmit=e=>{
+  e.preventDefault();
+  const eid=$("editId").value,name=$("empName").value.trim(),department=$("empDept").value.trim();
+  if(!name)return;
+  if(data.employees.some(x=>x.name.toLocaleLowerCase()===name.toLocaleLowerCase()&&x.id!==eid)){toast("اسم الموظف موجود مسبقاً.");return;}
+  if(eid){
+    const emp=data.employees.find(x=>x.id===eid);
+    if(emp){emp.name=name;emp.department=department;}
+    toast("تم تعديل بيانات الموظف.");
+  }else{
+    data.employees.push({id:uid(),name,department});
+    toast("تمت إضافة الموظف.");
+  }
+  save();resetForm();renderAll();
+};
+function resetForm(){
+  $("employeeForm").reset();
+  $("editId").value="";
+  $("formTitle").textContent="إضافة موظف جديد";
+}
+$("cancelEdit").onclick=resetForm;
+$("empSearch").oninput=renderEmployees;
+
+
+function renderEmployees(){
+  const q=$("empSearch").value.trim().toLocaleLowerCase();
+  const list=data.employees
+    .filter(e=>(e.name+" "+(e.department||"")).toLocaleLowerCase().includes(q))
+    .sort((a,b)=>a.name.localeCompare(b.name,"ar"));
+
+  $("empCount").textContent=list.length+" موظف";
+
+  $("employeesTable").innerHTML=list.length
+    ? `<div class="table-wrap"><table>
+        <thead>
+          <tr>
+            <th>اسم الموظف</th>
+            <th>القسم</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(e=>`
+            <tr>
+              <td>${safe(e.name)}</td>
+              <td>${safe(e.department||"—")}</td>
+              <td>
+                <button class="btn btn-light" data-edit="${safe(e.id)}">تعديل</button>
+                <button class="btn btn-red" data-delete="${safe(e.id)}">حذف</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table></div>`
+    : '<div class="panel empty">ماكو موظفين مضافين حالياً.</div>';
+
+  $("employeesTable").querySelectorAll("[data-edit]").forEach(b=>{
+    b.onclick=()=>{
+      const e=data.employees.find(x=>x.id===b.dataset.edit);
+      if(!e)return;
+
+      $("editId").value=e.id;
+      $("empName").value=e.name;
+      $("empDept").value=e.department||"";
+      $("formTitle").textContent="تعديل بيانات الموظف";
+      window.scrollTo({top:0,behavior:"smooth"});
+    };
+  });
+
+  $("employeesTable").querySelectorAll("[data-delete]").forEach(b=>{
+    b.onclick=()=>{
+      const e=data.employees.find(x=>x.id===b.dataset.delete);
+      if(!e)return;
+
+      if(!confirm(
+        `هل أنت متأكد من حذف الموظف "${e.name}"؟\n\nسجلات الحضور والانصراف السابقة ستبقى محفوظة.`
+      ))return;
+
+      // حفظ اسم الموظف داخل سجلاته قبل حذفه
+      data.attendance.forEach(r=>{
+        if(r.employeeId===e.id){
+          r.employeeName=e.name;
+        }
+      });
+
+      // حذف الموظف فقط، دون حذف سجلات الدوام
+      data.employees=data.employees.filter(x=>x.id!==e.id);
+
+      if($("editId").value===e.id){
+        resetForm();
+      }
+
+      save();
+      renderAll();
+      toast("تم حذف الموظف مع الاحتفاظ بسجلات دوامه.");
+    };
+  });
+}
+
+function populateSelects(){
+  ["filterEmp","reportEmp"].forEach(id=>{
+    const el=$(id),old=el.value;
+    el.innerHTML='<option value="">كل الموظفين</option>'+data.employees.slice().sort((a,b)=>a.name.localeCompare(b.name,"ar")).map(e=>`<option value="${safe(e.id)}">${safe(e.name)}</option>`).join("");
+    if(data.employees.some(e=>e.id===old))el.value=old;
+  });
+}
+$("applyFilters").onclick=renderRecords;
+$("resetFilters").onclick=()=>{
+  $("filterMonth").value=currentMonth();
+  $("filterDate").value="";
+  $("filterEmp").value="";
+  $("filterType").value="";
+  renderRecords();
+};
+
+// تحديث السجلات مباشرة عند تغيير الشهر أو أي فلتر
+["filterMonth","filterDate","filterEmp","filterType"].forEach(id=>{
+  $(id).addEventListener("change",renderRecords);
+});
+
+function getFilteredRecords(){
+  const month=$("filterMonth").value;
+  const date=$("filterDate").value;
+  const emp=$("filterEmp").value;
+  const type=$("filterType").value;
+
+  return data.attendance.filter(r=>
+    // الشهر والسنة هما الفلتر الافتراضي، والسجلات القديمة تبقى محفوظة
+    (!month||(r.date||"").slice(0,7)===month)&&
+    (!date||r.date===date)&&
+    (!emp||r.employeeId===emp)&&
+    (!type||(type==="in"?!!r.checkIn:!!r.checkOut))
+  ).slice().sort((a,b)=>(b.date+(b.checkIn||"")).localeCompare(a.date+(a.checkIn||"")));
+}
+
+function renderRecords(){
+  filteredRecords=getFilteredRecords();
+
+  const month=$("filterMonth").value;
+  const monthRecords=data.attendance.filter(r=>!month||(r.date||"").slice(0,7)===month);
+  $("monthSummary").textContent=
+    `الشهر المحدد: ${month||"كل الأشهر"} — عدد السجلات: ${monthRecords.length} — النتائج بعد تطبيق الفلاتر: ${filteredRecords.length}`;
+
+  $("recordsTable").innerHTML=filteredRecords.length?`<div class="table-wrap"><table><thead><tr><th>الموظف</th><th>التاريخ</th><th>الحضور</th><th>الانصراف</th><th>الحالة</th></tr></thead><tbody>${filteredRecords.map(r=>`<tr><td>${safe(employeeName(r.employeeId))}</td><td>${r.date}</td><td>${r.checkIn?`<span style="color:#18845b;font-weight:700;direction:ltr;display:inline-block">${r.checkIn}</span>`:"—"}</td><td>${r.checkOut?`<span style="color:#d84949;font-weight:700;direction:ltr;display:inline-block">${r.checkOut}</span>`:"—"}</td><td>${r.checkIn&&r.checkOut?'<span class="badge green">مكتمل</span>':r.checkIn?'<span class="badge">حاضر</span>':'<span class="badge red">بدون حضور</span>'}</td></tr>`).join("")}</tbody></table></div>`:'<div class="panel empty">ماكو سجلات مطابقة للفلاتر.</div>';
+}
+function renderDashboard(){
+  const rows=data.attendance.filter(r=>r.date===today());
+  $("totalEmployees").textContent=data.employees.length;
+  $("presentToday").textContent=rows.filter(r=>r.checkIn&&!r.checkOut).length;
+  $("outToday").textContent=rows.filter(r=>r.checkOut).length;
+  $("absentToday").textContent=Math.max(0,data.employees.length-rows.filter(r=>r.checkIn).length);
+  const recent=data.attendance.slice().sort((a,b)=>(b.date+(b.checkOut||b.checkIn)).localeCompare(a.date+(a.checkOut||a.checkIn))).slice(0,5);
+  $("recent").innerHTML=recent.length?`<div class="table-wrap"><table><thead><tr><th>الموظف</th><th>الدخول</th><th>الانصراف</th><th>التاريخ</th></tr></thead><tbody>${recent.map(r=>`<tr><td><strong>${safe(employeeName(r.employeeId))}</strong></td><td>${r.checkIn?`<span style="color:#18845b;font-weight:700;direction:ltr;display:inline-block">${r.checkIn}</span>`:'<span style="color:#a0a6b0">—</span>'}</td><td>${r.checkOut?`<span style="color:#d84949;font-weight:700;direction:ltr;display:inline-block">${r.checkOut}</span>`:'<span style="color:#a0a6b0">—</span>'}</td><td><span style="font-size:12px;color:#737b87;white-space:nowrap">${r.date}</span></td></tr>`).join("")}</tbody></table></div>`:'<div class="empty">لا توجد تسجيلات بعد.</div>';
+}
+
+$("csvBtn").onclick=()=>{
+  const rows=[["اسم الموظف","التاريخ","وقت الدخول","وقت الانصراف"],...filteredRecords.map(r=>[employeeName(r.employeeId),r.date,r.checkIn,r.checkOut])];
+
+  if(!filteredRecords.length){
+    toast("ماكو سجلات للتصدير بهذا الشهر.");
+    return;
+  }
+
+  const month=$("filterMonth").value||"كل-الأشهر";
+  download(
+    "\uFEFF"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n"),
+    "gerard-cafe-attendance-"+month+".csv",
+    "text/csv;charset=utf-8"
+  );
+  toast("تم تصدير سجلات الشهر المحدد.");
+};
+
+$("reportBtn").onclick=()=>{
+  const from=$("fromDate").value||"0000-00-00",to=$("toDate").value||"9999-99-99",eid=$("reportEmp").value;
+  const rows=data.attendance.filter(r=>r.date>=from&&r.date<=to&&(!eid||r.employeeId===eid));
+  const employees=data.employees.filter(e=>!eid||e.id===eid);
+  $("reportResults").innerHTML=`<div class="stats"><div class="stat"><div class="stat-label">أيام الحضور</div><div class="stat-number">${rows.filter(r=>r.checkIn).length}</div></div><div class="stat"><div class="stat-label">الانصرافات</div><div class="stat-number">${rows.filter(r=>r.checkOut).length}</div></div></div><div class="table-wrap"><table><thead><tr><th>الموظف</th><th>أيام الحضور</th><th>الانصراف</th></tr></thead><tbody>${employees.map(e=>{const a=rows.filter(r=>r.employeeId===e.id);return `<tr><td>${safe(e.name)}</td><td>${a.filter(r=>r.checkIn).length}</td><td>${a.filter(r=>r.checkOut).length}</td></tr>`}).join("")||'<tr><td colspan="3">لا توجد بيانات</td></tr>'}</tbody></table></div>`;
+};
+function download(content,name,type){
+  const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+$("backupBtn").onclick=()=>download(JSON.stringify(data,null,2),"gerard-cafe-backup.json","application/json");
+$("importBtn").onclick=()=>$("backupFile").click();
+$("backupFile").onchange=async e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  try{
+    const d=JSON.parse(await file.text());
+    if(!d||!Array.isArray(d.employees)||!Array.isArray(d.attendance))throw new Error("ملف النسخة غير صحيح.");
+    if(!confirm("سيتم استبدال البيانات الحالية. هل تريد المتابعة؟"))return;
+    data={employees:d.employees,attendance:d.attendance};
     save();renderAll();toast("تم استيراد النسخة بنجاح.");
   }catch(err){alert(err.message||"تعذر قراءة الملف.");}
   finally{e.target.value="";}
