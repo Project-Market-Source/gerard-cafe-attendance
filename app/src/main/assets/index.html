@@ -1,0 +1,24 @@
+    save();renderAll();toast("تم استيراد النسخة بنجاح.");
+  }catch(err){alert(err.message||"تعذر قراءة الملف.");}
+  finally{e.target.value="";}
+};
+$("clearBtn").onclick=()=>{
+  if(!confirm("هل أنت متأكد من حذف كل الموظفين والسجلات؟"))return;
+  data={employees:[],attendance:[]};
+  save();resetForm();renderAll();toast("تم حذف جميع البيانات.");
+};
+function renderAll(){
+  renderDashboard();
+  renderEmployees();
+  populateSelects();
+  renderRecords();
+  renderPicker();
+}
+
+// الشهر الحالي يظهر تلقائياً أول ما تفتح سجل الدوام
+$("filterMonth").value=currentMonth();
+
+renderAll();
+</script>
+</body>
+</html>
